@@ -8,6 +8,10 @@ async function startServer() {
 
     console.log("Conectado correctamente a PostgreSQL");
 
+    await sequelize.sync();
+
+    console.log("Modelos sincronizados correctamente");
+
     app.listen(PORT, () => {
       console.log(`Servidor corriendo en http://localhost:${PORT}`);
     });
