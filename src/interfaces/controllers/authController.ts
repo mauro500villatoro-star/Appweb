@@ -2,55 +2,55 @@ import { Request, Response } from "express";
 import { authService } from "../../application/use-cases/auth/authService";
 
 export const authController = {
-
-  async register(req: Request, res: Response) {
-
+    async register(req: Request, res: Response) {
     try {
-
-      const result = await authService.register(req.body);
-
-      res.status(201).json({
-        success: true,
-        message: result.message,
-        data: result.data
+      const user = await authService.createUser({
+        ...req.body,
+        rol: "CENSISTA"
       });
 
-    } catch (error: any) {
+      return res.status(201).json({
+        success: true,
+        message: "Registro exitoso",
+        data: user
+      });
+    } catch (error) {
+      const message = error instanceof Error
+        ? error.message
+        : "No fue posible registrar el usuario";
 
-      res.status(400).json({
+      const status = message.includes("ya existe") ? 409 : 400;
+
+      return res.status(status).json({
         success: false,
-        message: error.message,
+        message,
         data: null
       });
-
     }
+  },
 
+  async createUser(req: Request, res: Response) {
+    try {
+      const user = await authService.createUser(req.body);
+      return res.status(201).json({ success: true, message: "Usuario creado correctamente", data: user });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No fue posible crear el usuario";
+      const status = message.includes("ya existe") ? 409 : 400;
+      return res.status(status).json({ success: false, message, data: null });
+    }
   },
 
   async login(req: Request, res: Response) {
-
     try {
-
-      const { usuario, password } = req.body;
-
-      const result = await authService.login(usuario, password);
-
-      res.status(200).json({
-        success: true,
-        message: "Inicio de sesión exitoso",
-        data: result
-      });
-
-    } catch (error: any) {
-
-      res.status(401).json({
-        success: false,
-        message: error.message,
-        data: null
-      });
-
+      const result = await authService.login(req.body?.usuario, req.body?.password);
+      return res.status(200).json({ success: true, message: "Inicio de sesión exitoso", data: result });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No fue posible iniciar sesión";
+      return res.status(message.includes("JWT_SECRET") ? 500 : 401).json({ success: false, message, data: null });
     }
+  },
 
+  me(req: Request, res: Response) {
+    return res.json({ success: true, message: "Sesión válida", data: req.authenticatedUser });
   }
-
 };

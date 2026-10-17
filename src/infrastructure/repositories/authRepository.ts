@@ -1,32 +1,19 @@
-import Usuario from "../models/UsuarioModel";
 import { Op } from "sequelize";
+import Usuario from "../models/UsuarioModel";
 
 export const authRepository = {
-
-  async findUserByUsuario(usuario: string) {
-    return await Usuario.findOne({
-      where: { usuario }
-    });
+  findUserByUsuario(usuario: string) {
+    return Usuario.findOne({ where: { usuario } });
   },
 
-  async findUserByUsuarioOrCorreo(usuario: string, correo: string) {
-    return await Usuario.findOne({
-      where: {
-        [Op.or]: [
-          { usuario },
-          { correo }
-        ]
-      }
-    });
+  findUserByUsuarioOrCorreo(usuario: string, correo: string) {
+    return Usuario.findOne({ where: { [Op.or]: [{ usuario }, { correo }] } });
   },
 
-  async createUser(data: any) {
-    return await Usuario.create({
-      nombre: data.nombre,
-      apellido: data.apellido,
-      usuario: data.usuario,
-      correo: data.correo,
-      password: data.password
-    });
+  createUser(data: {
+    nombre: string; apellido: string; usuario: string; correo: string;
+    password: string; rol: "ADMINISTRADOR" | "CENSISTA";
+  }) {
+    return Usuario.create(data);
   }
 };

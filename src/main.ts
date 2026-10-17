@@ -5,20 +5,25 @@ import { sequelize } from "./database";
 async function startServer() {
   try {
     await sequelize.authenticate();
-
     console.log("Conectado correctamente a PostgreSQL");
 
-    await sequelize.sync();
+    // No ejecutar sequelize.sync() en producción. La estructura se actualiza
+    // mediante el script SQL versionado de migrations/ para proteger los datos.
+    if (process.env.DB_SYNC === "true") {
+      if (process.env.NODE_ENV === "production") {
+        throw new Error("DB_SYNC=true no está permitido en producción");
+      }
+      await sequelize.sync();
+      console.log("Modelos sincronizados (modo de desarrollo)");
+    }
 
-    console.log("Modelos sincronizados correctamente");
-
-    app.listen(PORT, () => {
-      console.log(`Servidor corriendo en http://localhost:${PORT}`);
+    app.listen(Number(PORT), "0.0.0.0", () => {
+      console.log(`Servidor escuchando en el puerto ${PORT}`);
     });
-
   } catch (error) {
     console.error("Error al iniciar el servidor:", error);
+    process.exit(1);
   }
 }
 
-startServer();
+void startServer();
